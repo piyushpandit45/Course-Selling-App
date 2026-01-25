@@ -1,0 +1,210 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { getUserPurchases } from '../services/authService';
+import '../styles/util.css';
+import './MyCourses.css';
+
+const MyCourses = () => {
+  const [purchasedCourses, setPurchasedCourses] = useState([]);
+  const [purchases, setPurchases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    // Safety check for JSON parsing
+    let user;
+    try {
+      user = userStr ? JSON.parse(userStr) : {};
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      user = {};
+    }
+    
+    if (!token || !user._id) {
+      setAlert({
+        type: 'error',
+        message: 'Please login as a user to view your courses.'
+      });
+      setLoading(false);
+      return;
+    }
+
+    fetchPurchasedCourses();
+  }, []);
+
+  const fetchPurchasedCourses = async () => {
+    try {
+      const response = await getUserPurchases();
+      setPurchases(response.purchases);
+      setPurchasedCourses(response.courses);
+    } catch (error) {
+      setAlert({
+        type: 'error',
+        message: error.error || 'Failed to load your courses.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="my-courses-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading your courses...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  
+  // Safe JSON parsing
+  let user;
+  try {
+    user = userStr ? JSON.parse(userStr) : {};
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    user = {};
+  }
+
+  if (!token || !user._id || user.firstName) {
+    return (
+      <div className="my-courses-page">
+        <div className="access-denied">
+          <h2>Access Denied</h2>
+          <p>Please login as a user to view your courses.</p>
+          <Link to="/login" className="btn btn-primary">
+            Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="my-courses-page">
+      {/* Alert */}
+      {alert && (
+        <div className="container">
+          <div className={`alert alert-${alert.type}`}>
+            <div className="flex items-center justify-between">
+              <span>{alert.message}</span>
+              <button
+                onClick={() => setAlert(null)}
+                className="alert-close"
+                aria-label="Close alert"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="page-header">
+        <div className="container">
+          <h1 className="page-title">My Courses</h1>
+          <p className="page-subtitle">
+            Access and manage your purchased courses
+          </p>
+        </div>
+      </div>
+
+      {/* Courses Content */}
+      <div className="container">
+        {purchasedCourses.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📚</div>
+            <h3>No courses purchased yet</h3>
+            <p>
+              Start your learning journey by exploring our course catalog.
+            </p>
+            <Link to="/courses" className="btn btn-primary">
+              Browse Courses
+            </Link>
+          </div>
+        ) : (
+          <>
+            {/* Stats */}
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-number">{purchasedCourses.length}</div>
+                <p className="stat-label">Courses Enrolled</p>
+              </div>
+              <div className="stat-card">
+                <div className="stat-number">{purchases.length}</div>
+                <p className="stat-label">Total Purchases</p>
+              </div>
+              <div className="stat-card">
+                <div className="stat-number">
+                  ₹{purchasedCourses.reduce((total, course) => total + course.price, 0)}
+                </div>
+                <p className="stat-label">Total Investment</p>
+              </div>
+            </div>
+
+            {/* Courses Grid */}
+            <div className="courses-section">
+              <h2 className="section-title">Your Courses</h2>
+              <div className="courses-grid">
+                {purchasedCourses.map((course) => (
+                  <div key={course._id} className="purchased-course-card">
+                    <div className="course-image-container">
+                      <img
+                        src={course.image.url}
+                        alt={course.title}
+                        className="course-image"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/400x300?text=Course+Image';
+                        }}
+                      />
+                      <div className="enrolled-badge">
+                        ✓ Enrolled
+                      </div>
+                    </div>
+                    
+                    <div className="course-content">
+                      <h3 className="course-title">{course.title}</h3>
+                      
+                      <p className="course-description">{course.description}</p>
+                      
+                      <div className="course-meta">
+                        <span className="course-price">₹{course.price}</span>
+                        <span className="purchase-date">
+                          Purchased on {new Date(
+                            purchases.find(p => p.courseId === course._id)?.createdAt || new Date()
+                          ).toLocaleDateString()}
+                        </span>
+                      </div>
+                      
+                      <div className="course-actions">
+                        <Link
+                          to={`/courses/${course._id}`}
+                          className="btn btn-primary course-btn"
+                        >
+                          Continue Learning
+                        </Link>
+                        <button className="btn btn-outline course-btn">
+                          View Certificate
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default MyCourses;
