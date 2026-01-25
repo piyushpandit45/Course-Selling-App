@@ -1,3 +1,3 @@
 // Centralized configuration for deployment
 export const BACKEND_URL =
-  process.env.REACT_APP_BACKEND_URL || "http://localhost:4001/api/v1";
+  process.env.REACT_APP_BACKEND_URL || "https://course-selling-app-3ihd.onrender.com";
