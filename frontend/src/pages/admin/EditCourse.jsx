@@ -50,38 +50,45 @@ const EditCourse = () => {
   }, [navigate]);
 
   useEffect(() => {
+    const fetchCourseData = async () => {
+      try {
+        const response = await getCourseDetails(courseId);
+        const course = response.course;
+        
+        setFormData({
+          title: course.title || '',
+          description: course.description || '',
+          price: course.price || 0,
+          image: null,
+          courseOverview: course.courseOverview || '',
+          syllabus: course.syllabus || '',
+          duration: course.duration || '',
+          level: course.level || '',
+          language: course.language || '',
+          instructor: course.instructor || '',
+          category: course.category || '',
+          prerequisites: course.prerequisites || '',
+          learningOutcomes: course.learningOutcomes || '',
+          thumbnailUrl: course.thumbnailUrl || '',
+          benefits: course.benefits || '',
+          eligibility: course.eligibility || ''
+        });
+        
+        setExistingImage(course.image);
+        setLoading(false);
+      } catch (error) {
+        setAlert({
+          type: 'error',
+          message: error.error || 'Failed to fetch course details'
+        });
+        setLoading(false);
+      }
+    };
+
     if (courseId) {
       fetchCourseData();
     }
   }, [courseId]);
-
-  const fetchCourseData = async () => {
-    try {
-      const response = await getCourseDetails(courseId);
-      const course = response.course;
-      
-      setFormData({
-        title: course.title || '',
-        description: course.description || '',
-        price: course.price || 0,
-        image: null,
-        courseOverview: course.courseOverview || '',
-        syllabus: course.syllabus || '',
-        duration: course.duration || '',
-        benefits: course.benefits || '',
-        eligibility: course.eligibility || ''
-      });
-      
-      setExistingImage(course.image);
-      setLoading(false);
-    } catch (error) {
-      setAlert({
-        type: 'error',
-        message: error.error || 'Failed to load course data.'
-      });
-      setLoading(false);
-    }
-  };
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
