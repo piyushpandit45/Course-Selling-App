@@ -1,5 +1,5 @@
 import axios from 'axios';
-import BACKEND_URL from '../utils/api.js';
+import { BACKEND_URL } from '../utils/utils.js';
 
 // Create axios instance
 const api = axios.create({
