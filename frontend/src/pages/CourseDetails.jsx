@@ -235,7 +235,7 @@ const CourseDetails = () => {
           
           <div className="contact-actions">
             <a
-              href="https://wa.me/919876543210?text=Hi!%20I'm%20interested%20in%20learning%20more%20about%20the%20course:%20" 
+              href="https://wa.me/9079603363?text=Hi!%20I'm%20interested%20in%20learning%20more%20about%20the%20course:%20" 
               target="_blank"
               rel="noopener noreferrer"
               className="contact-btn whatsapp-btn"
