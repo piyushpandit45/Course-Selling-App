@@ -4,6 +4,7 @@ import { z } from "zod";
 import jwt from "jsonwebtoken";
 import Purchase from "../models/purchase.model.js";
 import Course from "../models/course.model.js";
+import UserSession from "../models/UserSession.js";
 
 // Zod schema (only for signup)
 const userSchema = z.object({
@@ -54,7 +55,7 @@ export const signup = async (req, res) => {
 
 // ================= LOGIN =================
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, deviceId } = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -78,6 +79,23 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET_PASSWORD,
       { expiresIn: "7d" }
     );
+
+    // Device session management
+    try {
+      // Clean all existing sessions for this user
+      await UserSession.cleanUserSessions(user._id);
+      
+      // Create new session
+      await UserSession.create({
+        userId: user._id,
+        deviceId: deviceId || 'unknown',
+        token: token
+      });
+    } catch (sessionError) {
+      console.log("Session management error:", sessionError.message);
+      // Continue with login even if session management fails
+    }
+
     const cookieOptions = {
       expiresIn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
@@ -105,6 +123,18 @@ export const login = async (req, res) => {
 // ================= LOGOUT =================
 export const logout = async (req, res) => {
   try {
+    const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
+    
+    // Remove session from database
+    if (token) {
+      try {
+        await UserSession.removeSession(token);
+      } catch (sessionError) {
+        console.log("Session removal error:", sessionError.message);
+        // Continue with logout even if session removal fails
+      }
+    }
+    
     res.clearCookie("token");
     return res.status(200).json({
       message: "Logout successful",

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
+import UserSession from "../models/UserSession.js";
 
-function adminMiddleware(req, res, next) {
+async function adminMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -14,6 +15,12 @@ function adminMiddleware(req, res, next) {
       token,
       process.env.JWT_SECRET_PASSWORD // ✅ Fixed: Use same secret as user
     );
+
+    // Check if session exists in database
+    const session = await UserSession.validateSession(token);
+    if (!session) {
+      return res.status(401).json({ error: "Session expired or logged out" });
+    }
 
     req.adminId = decoded.id;
     next();

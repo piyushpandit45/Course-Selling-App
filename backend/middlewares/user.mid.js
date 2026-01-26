@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
+import UserSession from "../models/UserSession.js";
 
-function userMiddleware(req, res, next) {
+async function userMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   // 1️⃣ Token check
@@ -14,7 +15,13 @@ function userMiddleware(req, res, next) {
     // 2️⃣ Verify token using ENV secret
     const decoded = jwt.verify(token, process.env.JWT_SECRET_PASSWORD);
 
-    // 3️⃣ Attach user info to request
+    // 3️⃣ Check if session exists in database
+    const session = await UserSession.validateSession(token);
+    if (!session) {
+      return res.status(401).json({ error: "Session expired or logged out" });
+    }
+
+    // 4️⃣ Attach user info to request
     req.userId = decoded.userId || decoded.id;
 
     next();

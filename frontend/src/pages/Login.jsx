@@ -18,6 +18,14 @@ const Login = () => {
   const [alert, setAlert] = useState(null);
 
   useEffect(() => {
+    // Generate and store deviceId if not exists
+    let deviceId = localStorage.getItem('deviceId');
+    if (!deviceId) {
+      // Generate a simple UUID-like device ID
+      deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('deviceId', deviceId);
+    }
+
     // Check if user is already logged in
     try {
       const token = localStorage.getItem('token');
@@ -90,6 +98,15 @@ const Login = () => {
     try {
       let response;
       
+      // Get deviceId from localStorage
+      const deviceId = localStorage.getItem('deviceId') || 'unknown';
+      
+      // Add deviceId to form data
+      const loginData = {
+        ...formData,
+        deviceId: deviceId
+      };
+      
       if (userType === 'admin') {
         if (!adminGatePassed) {
           setAlert({
@@ -99,9 +116,9 @@ const Login = () => {
           setLoading(false);
           return;
         }
-        response = await adminLogin(formData);
+        response = await adminLogin(loginData);
       } else {
-        response = await userLogin(formData);
+        response = await userLogin(loginData);
       }
       
       // Safety check: Ensure response has required fields
