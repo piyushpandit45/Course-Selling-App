@@ -403,6 +403,27 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
+  
+  /* Certificate Modal Responsive */
+  .certificate-modal {
+    padding: 1rem;
+  }
+  
+  .certificate-modal-content {
+    max-height: 95vh;
+  }
+  
+  .certificate-modal-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .certificate-modal-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .certificate-download-section {
+    padding: 1.5rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -430,5 +451,13 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+  
+  .overlay-text {
+    padding: 1rem;
+  }
+  
+  .overlay-text h4 {
+    font-size: 1.2rem;
   }
 }

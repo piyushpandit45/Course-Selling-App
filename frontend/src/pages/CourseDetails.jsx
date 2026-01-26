@@ -111,6 +111,7 @@ const CourseDetails = () => {
   };
 
   const handleViewCertificate = () => {
+    console.log('View Certificate clicked'); // Debug log
     setShowCertificate(true);
     setPasswordError('');
   };
@@ -128,7 +129,7 @@ const CourseDetails = () => {
         downloadBtn.click();
       }
     } else {
-      setPasswordError('Incorrect password. Please try again.');
+      setPasswordError('Password wrong. Please try again.');
     }
   };
 
@@ -333,8 +334,7 @@ const CourseDetails = () => {
               <div className="certificate-preview">
                 <div className="certificate-overlay">
                   <div className="overlay-text">
-                    <h4>Complete this course to unlock your certificate</h4>
-                    <p>Finish all course materials to access your downloadable certificate</p>
+                    <h4>Complete this course</h4>
                   </div>
                 </div>
                 <Certificate
