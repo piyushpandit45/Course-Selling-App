@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCourseDetails, buyCourse } from '../services/courseService';
+import { getCourseDetails, buyCourse, getPurchases } from '../services/courseService';
+import Certificate from '../components/Certificate';
 import '../styles/util.css';
 import './CourseDetails.css';
 
@@ -12,11 +13,36 @@ const CourseDetails = () => {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [alert, setAlert] = useState(null);
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showCertificate, setShowCertificate] = useState(false);
+  const [certificatePassword, setCertificatePassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const fetchCourseDetail = useCallback(async () => {
     try {
       const response = await getCourseDetails(courseId);
       setCourse(response.course);
+      
+      // Check if user is logged in and if course is purchased
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      
+      if (token && userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          setUser(userData);
+          
+          // Check if this course is purchased
+          const purchasesResponse = await getPurchases();
+          const purchased = purchasesResponse.purchases?.some(
+            purchase => purchase.courseId._id === courseId
+          );
+          setIsPurchased(purchased);
+        } catch (error) {
+          console.error('Error checking purchase status:', error);
+        }
+      }
     } catch (error) {
       setAlert({
         type: 'error',
@@ -82,6 +108,28 @@ const CourseDetails = () => {
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  const handleViewCertificate = () => {
+    setShowCertificate(true);
+    setPasswordError('');
+  };
+
+  const handleDownloadCertificate = async () => {
+    if (!user) return;
+    
+    const expectedPassword = `${user.firstName}@2026`;
+    
+    if (certificatePassword === expectedPassword) {
+      setPasswordError('');
+      // Trigger PDF download in Certificate component
+      const downloadBtn = document.querySelector('.certificate-download-btn');
+      if (downloadBtn) {
+        downloadBtn.click();
+      }
+    } else {
+      setPasswordError('Incorrect password. Please try again.');
+    }
   };
 
   if (loading) {
@@ -153,13 +201,22 @@ const CourseDetails = () => {
               <div className="course-price">₹{course.price}</div>
               
               <div className="course-actions">
-                <button
-                  onClick={handleBuyCourse}
-                  disabled={buying}
-                  className="btn btn-primary buy-btn"
-                >
-                  {buying ? 'Processing...' : 'Buy Course'}
-                </button>
+                {!isPurchased ? (
+                  <button
+                    onClick={handleBuyCourse}
+                    disabled={buying}
+                    className="btn btn-primary buy-btn"
+                  >
+                    {buying ? 'Processing...' : 'Buy Course'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleViewCertificate}
+                    className="btn btn-outline certificate-btn"
+                  >
+                    View Certificate
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -254,6 +311,66 @@ const CourseDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Certificate Modal */}
+      {showCertificate && user && (
+        <div className="certificate-modal">
+          <div className="certificate-modal-content">
+            <div className="certificate-modal-header">
+              <h3>Course Certificate</h3>
+              <button
+                onClick={() => {
+                  setShowCertificate(false);
+                  setPasswordError('');
+                  setCertificatePassword('');
+                }}
+                className="close-btn"
+              >
+                ×
+              </button>
+            </div>
+            <div className="certificate-modal-body">
+              <div className="certificate-preview">
+                <div className="certificate-overlay">
+                  <div className="overlay-text">
+                    <h4>Complete this course to unlock your certificate</h4>
+                    <p>Finish all course materials to access your downloadable certificate</p>
+                  </div>
+                </div>
+                <Certificate
+                  user={user}
+                  course={course}
+                  purchaseDate={new Date().toISOString()}
+                />
+              </div>
+              
+              <div className="certificate-download-section">
+                <div className="password-input-group">
+                  <label htmlFor="certificate-password">Enter Certificate Password:</label>
+                  <input
+                    id="certificate-password"
+                    type="password"
+                    value={certificatePassword}
+                    onChange={(e) => setCertificatePassword(e.target.value)}
+                    placeholder="Enter password to download"
+                    className="form-input"
+                  />
+                  {passwordError && (
+                    <div className="password-error">{passwordError}</div>
+                  )}
+                </div>
+                
+                <button
+                  onClick={handleDownloadCertificate}
+                  className="btn btn-primary download-certificate-btn"
+                >
+                  Download Certificate (PDF)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

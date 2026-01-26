@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPurchases } from '../services/courseService';
-import Certificate from '../components/Certificate';
 import '../styles/util.css';
 import './Profile.css';
 
@@ -10,7 +9,6 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCertificate, setSelectedCertificate] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -224,14 +222,6 @@ const Profile = () => {
                           Enrolled on {new Date(purchase.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="course-actions">
-                        <button
-                          onClick={() => setSelectedCertificate(purchase)}
-                          className="btn btn-outline certificate-btn"
-                        >
-                          View Certificate
-                        </button>
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -240,30 +230,6 @@ const Profile = () => {
           </div>
         </div>
       </div>
-
-      {/* Certificate Modal */}
-      {selectedCertificate && (
-        <div className="certificate-modal">
-          <div className="certificate-modal-content">
-            <div className="certificate-modal-header">
-              <h3>Course Certificate</h3>
-              <button
-                onClick={() => setSelectedCertificate(null)}
-                className="close-btn"
-              >
-                ×
-              </button>
-            </div>
-            <div className="certificate-modal-body">
-              <Certificate
-                user={user}
-                course={selectedCertificate.courseId}
-                purchaseDate={selectedCertificate.createdAt}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -75,15 +75,15 @@ const Certificate = ({ user, course, purchaseDate }) => {
 
   return (
     <div className="certificate-container">
-      <div className="certificate-actions">
-        <button
-          onClick={generatePDF}
-          disabled={isGenerating}
-          className="btn btn-primary certificate-download-btn"
-        >
-          {isGenerating ? 'Generating PDF...' : 'Download Certificate (PDF)'}
-        </button>
-      </div>
+      {/* Hidden download button for external trigger */}
+      <button
+        onClick={generatePDF}
+        disabled={isGenerating}
+        className="certificate-download-btn"
+        style={{ display: 'none' }}
+      >
+        {isGenerating ? 'Generating PDF...' : 'Download Certificate (PDF)'}
+      </button>
       
       <div id="certificate-content" className="certificate-content">
         <div className="certificate-border">
