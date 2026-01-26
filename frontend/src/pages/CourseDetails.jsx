@@ -18,46 +18,62 @@ const CourseDetails = () => {
   const [showCertificate, setShowCertificate] = useState(false);
   const [certificatePassword, setCertificatePassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-
-  const fetchCourseDetail = useCallback(async () => {
-    try {
-      const response = await getCourseDetails(courseId);
-      setCourse(response.course);
-      
-      // Check if user is logged in and if course is purchased
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      
-      if (token && userStr) {
-        try {
-          const userData = JSON.parse(userStr);
-          setUser(userData);
-          
-          // Check if this course is purchased
-          const purchasesResponse = await getPurchases();
-          const purchased = purchasesResponse.purchases?.some(
-            purchase => purchase.courseId._id === courseId
-          );
-          setIsPurchased(purchased);
-        } catch (error) {
-          console.error('Error checking purchase status:', error);
-        }
-      }
-    } catch (error) {
-      setAlert({
-        type: 'error',
-        message: error.error || 'Failed to load course details.'
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [courseId]);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
-    if (courseId) {
-      fetchCourseDetail();
-    }
-  }, [courseId, fetchCourseDetail]);
+    const fetchCourseDetail = async () => {
+      try {
+        const response = await getCourseDetails(courseId);
+        setCourse(response.course);
+        
+        // Check if user is logged in and if course is purchased
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        
+        if (token && userStr) {
+          try {
+            const userData = JSON.parse(userStr);
+            setUser(userData);
+            
+            // Check if this course is purchased
+            const purchasesResponse = await getPurchases();
+            const purchased = purchasesResponse.purchases?.some(
+              purchase => purchase.courseId._id === courseId
+            );
+            setIsPurchased(purchased);
+          } catch (error) {
+            console.error('Error checking purchase status:', error);
+          }
+        }
+      } catch (error) {
+        setAlert({
+          type: 'error',
+          message: error.error || 'Failed to load course details.'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourseDetail();
+  }, [courseId]);
+
+  // DOM Force Binding for Certificate Button
+  useEffect(() => {
+    const btn = document.getElementById("view-certificate-btn");
+    if (!btn) return;
+
+    const handler = () => {
+      console.log("DOM CLICK WORKED");
+      openCertificatePreview();
+    };
+
+    btn.addEventListener("click", handler);
+
+    return () => {
+      btn.removeEventListener("click", handler);
+    };
+  }, [user, course]);
 
   const handleBuyCourse = async () => {
     const token = localStorage.getItem('token');
@@ -110,6 +126,11 @@ const CourseDetails = () => {
     navigate(-1);
   };
 
+  const openCertificatePreview = () => {
+    setShowCertificate(true);
+    setPasswordError('');
+  };
+
   const handleViewCertificate = () => {
     console.log('View Certificate clicked'); // Debug log
     setShowCertificate(true);
@@ -117,19 +138,25 @@ const CourseDetails = () => {
   };
 
   const handleDownloadCertificate = async () => {
+    setShowPasswordModal(true);
+    setPasswordError('');
+  };
+
+  const handlePasswordSubmit = () => {
     if (!user) return;
     
     const expectedPassword = `${user.firstName}@2026`;
     
     if (certificatePassword === expectedPassword) {
       setPasswordError('');
+      setShowPasswordModal(false);
       // Trigger PDF download in Certificate component
       const downloadBtn = document.querySelector('.certificate-download-btn');
       if (downloadBtn) {
         downloadBtn.click();
       }
     } else {
-      setPasswordError('Password wrong. Please try again.');
+      setPasswordError('Password incorrect');
     }
   };
 
@@ -212,6 +239,7 @@ const CourseDetails = () => {
                   </button>
                 ) : (
                   <button
+                    id="view-certificate-btn"
                     onClick={handleViewCertificate}
                     className="btn btn-outline certificate-btn"
                   >
@@ -334,7 +362,7 @@ const CourseDetails = () => {
               <div className="certificate-preview">
                 <div className="certificate-overlay">
                   <div className="overlay-text">
-                    <h4>Complete this course</h4>
+                    <h4>Complete this course to unlock certificate</h4>
                   </div>
                 </div>
                 <Certificate
@@ -345,28 +373,57 @@ const CourseDetails = () => {
               </div>
               
               <div className="certificate-download-section">
-                <div className="password-input-group">
-                  <label htmlFor="certificate-password">Enter Certificate Password:</label>
-                  <input
-                    id="certificate-password"
-                    type="password"
-                    value={certificatePassword}
-                    onChange={(e) => setCertificatePassword(e.target.value)}
-                    placeholder="Enter password to download"
-                    className="form-input"
-                  />
-                  {passwordError && (
-                    <div className="password-error">{passwordError}</div>
-                  )}
-                </div>
-                
                 <button
                   onClick={handleDownloadCertificate}
                   className="btn btn-primary download-certificate-btn"
                 >
-                  Download Certificate (PDF)
+                  Download Certificate
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Modal */}
+      {showPasswordModal && (
+        <div className="password-modal">
+          <div className="password-modal-content">
+            <div className="password-modal-header">
+              <h3>Enter Certificate Password</h3>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordError('');
+                  setCertificatePassword('');
+                }}
+                className="close-btn"
+              >
+                ×
+              </button>
+            </div>
+            <div className="password-modal-body">
+              <div className="password-input-group">
+                <label htmlFor="certificate-password">Password:</label>
+                <input
+                  id="certificate-password"
+                  type="password"
+                  value={certificatePassword}
+                  onChange={(e) => setCertificatePassword(e.target.value)}
+                  placeholder="Enter password to download"
+                  className="form-input"
+                />
+                {passwordError && (
+                  <div className="password-error">{passwordError}</div>
+                )}
+              </div>
+              
+              <button
+                onClick={handlePasswordSubmit}
+                className="btn btn-primary"
+              >
+                Download Certificate
+              </button>
             </div>
           </div>
         </div>
