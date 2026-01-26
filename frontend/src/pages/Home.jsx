@@ -106,9 +106,6 @@ const Home = () => {
               <Link to="/courses" className="btn btn-secondary hero-btn">
                 View Courses
               </Link>
-              <a href="#contact" className="btn btn-outline hero-btn hero-btn-outline">
-                Contact Us
-              </a>
             </div>
           </div>
         </div>
