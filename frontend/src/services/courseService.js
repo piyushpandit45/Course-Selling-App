@@ -77,3 +77,13 @@ export const getContacts = async () => {
     throw error.response.data;
   }
 };
+
+// Purchase Services
+export const getPurchases = async () => {
+  try {
+    const response = await api.get('/user/purchases');
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};

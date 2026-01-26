@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getPurchases } from '../services/courseService';
+import Certificate from '../components/Certificate';
 import '../styles/util.css';
 import './Profile.css';
 
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [purchases, setPurchases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCertificate, setSelectedCertificate] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -26,7 +31,21 @@ const Profile = () => {
     }
 
     setUser(userData);
+    
+    // Fetch purchased courses
+    fetchPurchases();
   }, [navigate]);
+
+  const fetchPurchases = async () => {
+    try {
+      const response = await getPurchases();
+      setPurchases(response.purchases || []);
+    } catch (error) {
+      console.error('Error fetching purchases:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -35,7 +54,7 @@ const Profile = () => {
     navigate('/');
   };
 
-  if (!user) {
+  if (!user || loading) {
     return (
       <div className="profile-page">
         <div className="loading-container">
@@ -169,22 +188,82 @@ const Profile = () => {
               
               <div className="stats-grid">
                 <div className="stat-item">
-                  <div className="stat-number">0</div>
-                  <p className="stat-label">Courses Completed</p>
+                  <div className="stat-number">{purchases.length}</div>
+                  <p className="stat-label">Courses Enrolled</p>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-number">0</div>
+                  <div className="stat-number">{purchases.length}</div>
                   <p className="stat-label">Certificates Earned</p>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-number">0</div>
+                  <div className="stat-number">{purchases.length * 3}</div>
                   <p className="stat-label">Hours Learned</p>
                 </div>
               </div>
             </div>
+
+            {/* Purchased Courses */}
+            <div className="purchased-courses">
+              <h3 className="section-title">My Courses</h3>
+              
+              {purchases.length === 0 ? (
+                <div className="no-courses">
+                  <p>You haven't enrolled in any courses yet.</p>
+                  <a href="/courses" className="btn btn-primary">
+                    Browse Courses
+                  </a>
+                </div>
+              ) : (
+                <div className="courses-list">
+                  {purchases.map((purchase) => (
+                    <div key={purchase._id} className="course-item">
+                      <div className="course-info">
+                        <h4 className="course-title">{purchase.courseId.title}</h4>
+                        <p className="course-description">{purchase.courseId.description}</p>
+                        <p className="purchase-date">
+                          Enrolled on {new Date(purchase.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="course-actions">
+                        <button
+                          onClick={() => setSelectedCertificate(purchase)}
+                          className="btn btn-outline certificate-btn"
+                        >
+                          View Certificate
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Certificate Modal */}
+      {selectedCertificate && (
+        <div className="certificate-modal">
+          <div className="certificate-modal-content">
+            <div className="certificate-modal-header">
+              <h3>Course Certificate</h3>
+              <button
+                onClick={() => setSelectedCertificate(null)}
+                className="close-btn"
+              >
+                ×
+              </button>
+            </div>
+            <div className="certificate-modal-body">
+              <Certificate
+                user={user}
+                course={selectedCertificate.courseId}
+                purchaseDate={selectedCertificate.createdAt}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
