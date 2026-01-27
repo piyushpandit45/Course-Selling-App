@@ -6,6 +6,7 @@ import './Navbar.css';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState('public');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -15,6 +16,19 @@ const Navbar = () => {
     localStorage.removeItem('role');
     setUserRole('public');
     navigate('/');
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    handleLogout();
+    setShowLogoutConfirm(false);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   useEffect(() => {
@@ -69,14 +83,14 @@ const Navbar = () => {
     { label: 'About Us', path: '/#about' },
     { label: 'My Courses', path: '/my-courses' },
     { label: 'Profile', path: '/profile' },
-    { label: 'Logout', path: '#', action: handleLogout },
+    { label: 'Logout', path: '#', action: handleLogoutClick },
   ];
 
   const adminNavItems = [
     { label: 'Dashboard', path: '/admin/dashboard' },
     { label: 'Add Course', path: '/admin/add-course' },
     { label: 'Manage Courses', path: '/admin/manage-courses' },
-    { label: 'Logout', path: '#', action: handleLogout },
+    { label: 'Logout', path: '#', action: handleLogoutClick },
   ];
 
   const getNavItems = () => {
@@ -196,6 +210,26 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      {showLogoutConfirm && (
+        <div className="modal-overlay" onClick={cancelLogout}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <h3>Confirm Logout</h3>
+              <p>Do you want to logout?</p>
+              <div className="modal-actions">
+                <button className="btn btn-primary" onClick={confirmLogout}>
+                  Yes
+                </button>
+                <button className="btn btn-outline" onClick={cancelLogout}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

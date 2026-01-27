@@ -545,6 +545,10 @@
     gap: 1rem;
   }
   
+  .password-input-group {
+    width: 100%;
+  }
+  
   .certificate-actions {
     padding: 1rem;
   }
