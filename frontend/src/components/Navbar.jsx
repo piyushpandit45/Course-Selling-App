@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import LogoutConfirm from './LogoutConfirm';
 import '../styles/util.css';
 import './Navbar.css';
 
@@ -211,25 +212,12 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Logout Confirmation Dialog */}
-      {showLogoutConfirm && (
-        <div className="modal-overlay" onClick={cancelLogout}>
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content">
-              <h3>Confirm Logout</h3>
-              <p>Do you want to logout?</p>
-              <div className="modal-actions">
-                <button className="btn btn-primary" onClick={confirmLogout}>
-                  Yes
-                </button>
-                <button className="btn btn-outline" onClick={cancelLogout}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Logout Confirmation - Shared Component */}
+      <LogoutConfirm
+        show={showLogoutConfirm}
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
     </>
   );
 };

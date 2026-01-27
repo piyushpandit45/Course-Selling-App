@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPurchases } from '../services/courseService';
-import jsPDF from 'jspdf';
+import CertificateModal from '../components/CertificateModal';
+import LogoutConfirm from '../components/LogoutConfirm';
 import '../styles/util.css';
 import './Profile.css';
 
@@ -18,6 +19,7 @@ const Profile = () => {
   const [certificatePassword, setCertificatePassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -59,6 +61,19 @@ const Profile = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('role');
     navigate('/');
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    handleLogout();
+    setShowLogoutConfirm(false);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   const handleEditProfile = () => {
@@ -139,62 +154,9 @@ const Profile = () => {
     if (certificatePassword === expectedPassword) {
       setPasswordError('');
       setIsUnlocked(true);
-      generateCertificatePDF(certificateModal.course, user);
     } else {
       setPasswordError('Password wrong');
     }
-  };
-
-  const generateCertificatePDF = (course, user) => {
-    const doc = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4'
-    });
-    
-    // Find the purchase for this course
-    const purchase = purchases.find(p => p.courseId._id === course._id);
-    
-    // Certificate design
-    doc.setFillColor(102, 126, 234);
-    doc.rect(0, 0, 297, 210, 'F');
-    
-    doc.setFillColor(255, 255, 255);
-    doc.rect(10, 10, 277, 190, 'F');
-    
-    doc.setFontSize(24);
-    doc.setTextColor(102, 126, 234);
-    doc.text('AI DOT SKILLS', 148.5, 35, { align: 'center' });
-    
-    doc.setFontSize(18);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Certificate of Completion', 148.5, 55, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.text('This is to certify that', 148.5, 75, { align: 'center' });
-    
-    doc.setFontSize(16);
-    doc.setTextColor(102, 126, 234);
-    doc.text(`${user.firstname} ${user.lastname || ''}`, 148.5, 90, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`has successfully completed ${course.title} from AI DOT SKILLS.`, 148.5, 105, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.text(`Duration: ${course.duration || 'Self-paced'}`, 148.5, 125, { align: 'center' });
-    doc.text(`Start Date: ${new Date(purchase?.createdAt || new Date()).toLocaleDateString()}`, 148.5, 135, { align: 'center' });
-    doc.text(`End Date: ${new Date().toLocaleDateString()}`, 148.5, 145, { align: 'center' });
-    
-    doc.setFontSize(8);
-    doc.text(`Certificate ID: ${user._id.slice(-8).toUpperCase()}-${course._id.slice(-8).toUpperCase()}`, 148.5, 165, { align: 'center' });
-    doc.text(`Issue Date: ${new Date().toLocaleDateString()}`, 148.5, 175, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.text('Authorized Signature', 148.5, 190, { align: 'center' });
-    
-    // Download PDF
-    doc.save(`${user.firstname}_${course.title}_Certificate.pdf`);
   };
 
   if (!user || loading) {
@@ -248,7 +210,7 @@ const Profile = () => {
                   Edit Profile
                 </button>
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   className="btn btn-outline logout-btn"
                 >
                   Logout
@@ -461,104 +423,26 @@ const Profile = () => {
         </div>
       )}
 
-      {/* Certificate Modal */}
-      {certificateModal.show && certificateModal.course && (
-        <div className="certificate-modal-overlay" onClick={handleCloseCertificate}>
-          <div className="certificate-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="certificate-header">
-              <h3>Course Certificate</h3>
-              <button className="close-btn" onClick={handleCloseCertificate}>×</button>
-            </div>
-            
-            <div className={`certificate-content ${isUnlocked ? '' : 'blurred'}`}>
-              <div className="certificate-design">
-                <div className="certificate-header-section">
-                  <h1>AI DOT SKILLS</h1>
-                  <p>Professional Education Platform</p>
-                </div>
-                
-                <div className="certificate-title-section">
-                  <h2>Certificate of Completion</h2>
-                  <div className="divider"></div>
-                </div>
-                
-                <div className="certificate-recipient">
-                  <p>This is to certify that</p>
-                  <h3>{user.firstname} {user.lastname || ''}</h3>
-                  <p>has successfully completed {certificateModal.course.title} from AI DOT SKILLS.</p>
-                </div>
-                
-                <div className="certificate-details">
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <span>Duration:</span>
-                      <span>{certificateModal.course.duration || 'Self-paced'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span>Start Date:</span>
-                      <span>{new Date(purchases.find(p => p.courseId._id === certificateModal.course._id)?.createdAt || new Date()).toLocaleDateString()}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span>End Date:</span>
-                      <span>{new Date().toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="certificate-footer">
-                  <div className="certificate-id">
-                    Certificate ID: {user._id.slice(-8).toUpperCase()}-{certificateModal.course._id.slice(-8).toUpperCase()}
-                  </div>
-                  <div className="issue-date">
-                    Issue Date: {new Date().toLocaleDateString()}
-                  </div>
-                  <div className="signature">
-                    Authorized Signature
-                  </div>
-                </div>
-              </div>
-              
-              {!isUnlocked && (
-                <div className="certificate-watermark">
-                  <p>Complete this course to unlock certificate</p>
-                </div>
-              )}
-            </div>
-            
-            <div className="certificate-actions">
-              {!isUnlocked ? (
-                <div className="password-section">
-                  <div className="password-input-group">
-                    <input
-                      type="password"
-                      value={certificatePassword}
-                      onChange={(e) => setCertificatePassword(e.target.value)}
-                      placeholder="Enter certificate password"
-                      className="password-input"
-                    />
-                    {passwordError && (
-                      <div className="password-error">{passwordError}</div>
-                    )}
-                  </div>
-                  <button
-                    className="btn btn-primary"
-                    onClick={handlePasswordSubmit}
-                  >
-                    Download Certificate
-                  </button>
-                </div>
-              ) : (
-                <button
-                  className="btn btn-success"
-                  onClick={() => generateCertificatePDF(certificateModal.course, user)}
-                >
-                  Download Certificate
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Certificate Modal - Shared Component */}
+      <CertificateModal
+        show={certificateModal.show}
+        course={certificateModal.course}
+        user={user}
+        purchases={purchases}
+        onClose={handleCloseCertificate}
+        onPasswordSubmit={handlePasswordSubmit}
+        certificatePassword={certificatePassword}
+        setCertificatePassword={setCertificatePassword}
+        passwordError={passwordError}
+        isUnlocked={isUnlocked}
+      />
+
+      {/* Logout Confirmation - Shared Component */}
+      <LogoutConfirm
+        show={showLogoutConfirm}
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
     </div>
   );
 };
