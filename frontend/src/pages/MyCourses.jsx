@@ -9,6 +9,7 @@ const MyCourses = () => {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
+  const [activeCertId, setActiveCertId] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -50,6 +51,19 @@ const MyCourses = () => {
     }
   };
 
+  const handleDownloadCertificate = (course, user) => {
+    const expectedPassword = `${user.firstName}@2026`;
+    const enteredPassword = prompt('Enter password to download certificate:');
+    
+    if (enteredPassword === expectedPassword) {
+      // Generate PDF using html2pdf or similar
+      alert('Certificate download functionality would be implemented here with html2pdf library');
+      console.log('Certificate generated for:', user.firstName, course.title);
+    } else {
+      alert('Password incorrect');
+    }
+  };
+
   if (loading) {
     return (
       <div className="my-courses-page">
@@ -73,7 +87,7 @@ const MyCourses = () => {
     user = {};
   }
 
-  if (!token || !user._id || user.firstName) {
+  if (!token || !user._id || !user.firstName) {
     return (
       <div className="my-courses-page">
         <div className="access-denied">
@@ -154,7 +168,9 @@ const MyCourses = () => {
             <div className="courses-section">
               <h2 className="section-title">Your Courses</h2>
               <div className="courses-grid">
-                {purchasedCourses.map((course) => (
+                {purchasedCourses.map((course) => {
+                  console.log("Rendering button for course:", course._id);
+                  return (
                   <div key={course._id} className="purchased-course-card">
                     <div className="course-image-container">
                       <img
@@ -191,13 +207,51 @@ const MyCourses = () => {
                         >
                           Continue Learning
                         </Link>
-                        <button className="btn btn-outline course-btn">
+                        <button 
+                          className="btn btn-outline course-btn certificate-btn"
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setActiveCertId(course._id);
+                          }}
+                          style={{
+                            position: 'relative !important',
+                            zIndex: '9999 !important',
+                            pointerEvents: 'all !important',
+                            cursor: 'pointer !important'
+                          }}
+                        >
                           View Certificate
                         </button>
                       </div>
                     </div>
+                    
+                    {/* Certificate UI - Only show below this course when active */}
+                    {activeCertId === course._id && (
+                      <div className="certificate-container">
+                        <div className="certificate-view" style={{ filter: 'blur(8px)', position: 'relative' }}>
+                          <div className="certificate-content">
+                            <h4>Certificate of Completion</h4>
+                            <p>This is to certify that {user.firstName} {user.lastName || ''}</p>
+                            <p>has successfully completed the course</p>
+                            <h3>{course.title}</h3>
+                            <p>Platform: AI DOT SKILLS</p>
+                            <p>Date: {new Date().toLocaleDateString()}</p>
+                          </div>
+                          <div className="certificate-overlay">
+                            <p>Complete this course to unlock</p>
+                          </div>
+                        </div>
+                        <button 
+                          className="btn btn-primary download-cert-btn"
+                          onClick={() => handleDownloadCertificate(course, user)}
+                        >
+                          Download Certificate
+                        </button>
+                      </div>
+                    )}
                   </div>
-                ))}
+                );
+                })}
               </div>
             </div>
           </>
