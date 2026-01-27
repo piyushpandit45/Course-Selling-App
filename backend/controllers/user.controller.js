@@ -83,7 +83,10 @@ export const login = async (req, res) => {
     // Device session management
     try {
       // Clean all existing sessions for this user
-      await UserSession.cleanUserSessions(user._id);
+      const cleanupResult = await UserSession.cleanUserSessions(user._id);
+      if (cleanupResult) {
+        console.log(`Cleaned up ${cleanupResult.deletedCount} old sessions for user ${user._id}`);
+      }
       
       // Create new session
       await UserSession.create({
@@ -91,6 +94,7 @@ export const login = async (req, res) => {
         deviceId: deviceId || 'unknown',
         token: token
       });
+      console.log(`Created new session for user ${user._id} on device ${deviceId || 'unknown'}`);
     } catch (sessionError) {
       console.log("Session management error:", sessionError.message);
       // Continue with login even if session management fails
@@ -128,7 +132,10 @@ export const logout = async (req, res) => {
     // Remove session from database
     if (token) {
       try {
-        await UserSession.removeSession(token);
+        const removalResult = await UserSession.removeSession(token);
+        if (removalResult) {
+          console.log(`Removed session for token: ${token.substring(0, 10)}...`);
+        }
       } catch (sessionError) {
         console.log("Session removal error:", sessionError.message);
         // Continue with logout even if session removal fails

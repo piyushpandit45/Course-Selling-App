@@ -32,17 +32,32 @@ userSessionSchema.index({ userId: 1, createdAt: -1 });
 
 // Static method to clean old sessions for a user
 userSessionSchema.statics.cleanUserSessions = async function(userId) {
-  return await this.deleteMany({ userId });
+  try {
+    return await this.deleteMany({ userId });
+  } catch (error) {
+    console.error('Session cleanup error:', error);
+    return null;
+  }
 };
 
 // Static method to validate session
 userSessionSchema.statics.validateSession = async function(token) {
-  return await this.findOne({ token });
+  try {
+    return await this.findOne({ token });
+  } catch (error) {
+    console.error('Session validation error:', error);
+    return null;
+  }
 };
 
 // Static method to remove session by token
 userSessionSchema.statics.removeSession = async function(token) {
-  return await this.deleteOne({ token });
+  try {
+    return await this.deleteOne({ token });
+  } catch (error) {
+    console.error('Session removal error:', error);
+    return null;
+  }
 };
 
 const UserSession = mongoose.model('UserSession', userSessionSchema);
