@@ -14,21 +14,24 @@ const MyCourses = () => {
   const [certificatePassword, setCertificatePassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     
     // Safety check for JSON parsing
-    let user;
+    let userData;
     try {
-      user = userStr ? JSON.parse(userStr) : {};
+      userData = userStr ? JSON.parse(userStr) : {};
+      setUser(userData);
     } catch (error) {
       console.error('Error parsing user data:', error);
-      user = {};
+      userData = {};
+      setUser({});
     }
     
-    if (!token || !user._id) {
+    if (!token || !userData._id) {
       setAlert({
         type: 'error',
         message: 'Please login as a user to view your courses.'
@@ -70,6 +73,11 @@ const MyCourses = () => {
   };
 
   const handlePasswordSubmit = () => {
+    if (!user || !user.firstName) {
+      setPasswordError('User data not available');
+      return;
+    }
+    
     const expectedPassword = `${user.firstName}@2026`;
     
     if (certificatePassword === expectedPassword) {
@@ -148,16 +156,19 @@ const MyCourses = () => {
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
   
-  // Safe JSON parsing
-  let user;
+  // Safe JSON parsing for initial render
+  let userData;
   try {
-    user = userStr ? JSON.parse(userStr) : {};
+    userData = userStr ? JSON.parse(userStr) : {};
   } catch (error) {
     console.error('Error parsing user data:', error);
-    user = {};
+    userData = {};
   }
 
-  if (!token || !user._id || !user.firstName) {
+  // Use state user if available, otherwise use parsed data
+  const currentUser = user || userData;
+
+  if (!token || !currentUser._id || !currentUser.firstName) {
     return (
       <div className="my-courses-page">
         <div className="access-denied">
@@ -314,7 +325,7 @@ const MyCourses = () => {
                 
                 <div className="certificate-recipient">
                   <p>This is to certify that</p>
-                  <h3>{user.firstName} {user.lastName || ''}</h3>
+                  <h3>{currentUser.firstName} {currentUser.lastName || ''}</h3>
                   <p>has successfully completed {certificateModal.course.title} from AI DOT SKILLS.</p>
                 </div>
                 
@@ -337,7 +348,7 @@ const MyCourses = () => {
                 
                 <div className="certificate-footer">
                   <div className="certificate-id">
-                    Certificate ID: {generateCertificateId(user._id, certificateModal.course._id)}
+                    Certificate ID: {generateCertificateId(currentUser._id, certificateModal.course._id)}
                   </div>
                   <div className="issue-date">
                     Issue Date: {new Date().toLocaleDateString()}
@@ -380,7 +391,7 @@ const MyCourses = () => {
               ) : (
                 <button
                   className="btn btn-success"
-                  onClick={() => generateCertificatePDF(certificateModal.course, user)}
+                  onClick={() => generateCertificatePDF(certificateModal.course, currentUser)}
                 >
                   Download Certificate
                 </button>
