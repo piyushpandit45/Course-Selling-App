@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getUserPurchases } from '../services/authService';
+import jsPDF from 'jspdf';
 import '../styles/util.css';
 import './MyCourses.css';
 
@@ -56,11 +57,43 @@ const MyCourses = () => {
     const enteredPassword = prompt('Enter password to download certificate:');
     
     if (enteredPassword === expectedPassword) {
-      // Generate PDF using html2pdf or similar
-      alert('Certificate download functionality would be implemented here with html2pdf library');
+      // Generate PDF using jspdf
+      const doc = new jsPDF();
+      
+      // AI DOT SKILLS branded certificate
+      doc.setFontSize(24);
+      doc.setTextColor(102, 126, 234);
+      doc.text('AI DOT SKILLS', 105, 30, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Certificate of Completion', 105, 50, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.text('This is to certify that', 105, 70, { align: 'center' });
+      
+      doc.setFontSize(14);
+      doc.setTextColor(102, 126, 234);
+      doc.text(`${user.firstName} ${user.lastName || ''}`, 105, 85, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('has successfully completed the course', 105, 100, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.setTextColor(102, 126, 234);
+      doc.text(course.title, 105, 120, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 105, 140, { align: 'center' });
+      doc.text(`Duration: ${course.duration || 'Self-paced'}`, 105, 150, { align: 'center' });
+      
+      // Save the PDF
+      doc.save(`${user.firstName}_${course.title}_Certificate.pdf`);
       console.log('Certificate generated for:', user.firstName, course.title);
     } else {
-      alert('Password incorrect');
+      alert('Password wrong');
     }
   };
 
@@ -208,16 +241,19 @@ const MyCourses = () => {
                           Continue Learning
                         </Link>
                         <button 
+                          type="button"
                           className="btn btn-outline course-btn certificate-btn"
                           onClick={(e) => { 
+                            console.log("CLICK REGISTERED - Certificate button clicked!");
                             e.stopPropagation(); 
+                            e.preventDefault();
                             setActiveCertId(course._id);
                           }}
                           style={{
-                            position: 'relative !important',
-                            zIndex: '9999 !important',
-                            pointerEvents: 'all !important',
-                            cursor: 'pointer !important'
+                            position: 'relative',
+                            zIndex: 9999,
+                            pointerEvents: 'auto',
+                            cursor: 'pointer'
                           }}
                         >
                           View Certificate
@@ -228,7 +264,7 @@ const MyCourses = () => {
                     {/* Certificate UI - Only show below this course when active */}
                     {activeCertId === course._id && (
                       <div className="certificate-container">
-                        <div className="certificate-view" style={{ filter: 'blur(8px)', position: 'relative' }}>
+                        <div className="certificate-view" style={{ filter: 'blur(5px)', position: 'relative' }}>
                           <div className="certificate-content">
                             <h4>Certificate of Completion</h4>
                             <p>This is to certify that {user.firstName} {user.lastName || ''}</p>

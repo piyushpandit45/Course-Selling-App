@@ -266,6 +266,8 @@
   background-color: #f8f9fa;
   border-radius: 0.5rem;
   border: 1px solid var(--border-color);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .certificate-view {
