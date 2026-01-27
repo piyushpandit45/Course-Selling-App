@@ -73,12 +73,12 @@ const MyCourses = () => {
   };
 
   const handlePasswordSubmit = () => {
-    if (!user || !user.firstName) {
+    if (!user || !user.firstname) {
       setPasswordError('User data not available');
       return;
     }
     
-    const expectedPassword = `${user.firstName}@2026`;
+    const expectedPassword = `${user.firstname}@2026`;
     
     if (certificatePassword === expectedPassword) {
       setPasswordError('');
@@ -116,7 +116,7 @@ const MyCourses = () => {
     
     doc.setFontSize(16);
     doc.setTextColor(102, 126, 234);
-    doc.text(`${user.firstName} ${user.lastName || ''}`, 148.5, 90, { align: 'center' });
+    doc.text(`${user.firstname} ${user.lastname || ''}`, 148.5, 90, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
@@ -135,7 +135,7 @@ const MyCourses = () => {
     doc.text('Authorized Signature', 148.5, 190, { align: 'center' });
     
     // Download PDF
-    doc.save(`${user.firstName}_${course.title}_Certificate.pdf`);
+    doc.save(`${user.firstname}_${course.title}_Certificate.pdf`);
   };
 
   const generateCertificateId = (userId, courseId) => {
@@ -168,7 +168,7 @@ const MyCourses = () => {
   // Use state user if available, otherwise use parsed data
   const currentUser = user || userData;
 
-  if (!token || !currentUser._id || !currentUser.firstName) {
+  if (!token || !currentUser._id || !currentUser.firstname) {
     return (
       <div className="my-courses-page">
         <div className="access-denied">
@@ -325,7 +325,7 @@ const MyCourses = () => {
                 
                 <div className="certificate-recipient">
                   <p>This is to certify that</p>
-                  <h3>{currentUser.firstName} {currentUser.lastName || ''}</h3>
+                  <h3>{currentUser.firstname} {currentUser.lastname || ''}</h3>
                   <p>has successfully completed {certificateModal.course.title} from AI DOT SKILLS.</p>
                 </div>
                 

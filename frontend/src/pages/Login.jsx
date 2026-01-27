@@ -44,7 +44,8 @@ const Login = () => {
       }
       
       if (token && user._id) {
-        if (user.firstName) {
+        const role = localStorage.getItem('role');
+        if (role === 'admin') {
           navigate('/admin/dashboard');
         } else {
           navigate('/');
