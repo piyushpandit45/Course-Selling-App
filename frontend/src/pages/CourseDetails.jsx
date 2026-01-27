@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCourseDetails, buyCourse, getPurchases } from '../services/courseService';
-import Certificate from '../components/Certificate';
 import '../styles/util.css';
 import './CourseDetails.css';
 
@@ -14,11 +13,6 @@ const CourseDetails = () => {
   const [buying, setBuying] = useState(false);
   const [alert, setAlert] = useState(null);
   const [isPurchased, setIsPurchased] = useState(false);
-  const [user, setUser] = useState(null);
-  const [showCertificate, setShowCertificate] = useState(false);
-  const [certificatePassword, setCertificatePassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
     const fetchCourseDetail = async () => {
@@ -32,8 +26,7 @@ const CourseDetails = () => {
         
         if (token && userStr) {
           try {
-            const userData = JSON.parse(userStr);
-            setUser(userData);
+            JSON.parse(userStr);
             
             // Check if this course is purchased
             const purchasesResponse = await getPurchases();
@@ -57,23 +50,6 @@ const CourseDetails = () => {
 
     fetchCourseDetail();
   }, [courseId]);
-
-  // DOM Force Binding for Certificate Button
-  useEffect(() => {
-    const btn = document.getElementById("view-certificate-btn");
-    if (!btn) return;
-
-    const handler = () => {
-      console.log("DOM CLICK WORKED");
-      openCertificatePreview();
-    };
-
-    btn.addEventListener("click", handler);
-
-    return () => {
-      btn.removeEventListener("click", handler);
-    };
-  }, [user, course]);
 
   const handleBuyCourse = async () => {
     const token = localStorage.getItem('token');
@@ -124,40 +100,6 @@ const CourseDetails = () => {
 
   const handleGoBack = () => {
     navigate(-1);
-  };
-
-  const openCertificatePreview = () => {
-    setShowCertificate(true);
-    setPasswordError('');
-  };
-
-  const handleViewCertificate = () => {
-    console.log('View Certificate clicked'); // Debug log
-    setShowCertificate(true);
-    setPasswordError('');
-  };
-
-  const handleDownloadCertificate = async () => {
-    setShowPasswordModal(true);
-    setPasswordError('');
-  };
-
-  const handlePasswordSubmit = () => {
-    if (!user) return;
-    
-    const expectedPassword = `${user.firstName}@2026`;
-    
-    if (certificatePassword === expectedPassword) {
-      setPasswordError('');
-      setShowPasswordModal(false);
-      // Trigger PDF download in Certificate component
-      const downloadBtn = document.querySelector('.certificate-download-btn');
-      if (downloadBtn) {
-        downloadBtn.click();
-      }
-    } else {
-      setPasswordError('Password incorrect');
-    }
   };
 
   if (loading) {
@@ -239,11 +181,10 @@ const CourseDetails = () => {
                   </button>
                 ) : (
                   <button
-                    id="view-certificate-btn"
-                    onClick={handleViewCertificate}
-                    className="btn btn-outline certificate-btn"
+                    className="btn btn-outline"
+                    disabled
                   >
-                    View Certificate
+                    Certificate Available on Completion
                   </button>
                 )}
               </div>
@@ -340,94 +281,6 @@ const CourseDetails = () => {
           </div>
         </div>
       </div>
-
-      {/* Certificate Modal */}
-      {showCertificate && user && (
-        <div className="certificate-modal">
-          <div className="certificate-modal-content">
-            <div className="certificate-modal-header">
-              <h3>Course Certificate</h3>
-              <button
-                onClick={() => {
-                  setShowCertificate(false);
-                  setPasswordError('');
-                  setCertificatePassword('');
-                }}
-                className="close-btn"
-              >
-                ×
-              </button>
-            </div>
-            <div className="certificate-modal-body">
-              <div className="certificate-preview">
-                <div className="certificate-overlay">
-                  <div className="overlay-text">
-                    <h4>Complete this course to unlock certificate</h4>
-                  </div>
-                </div>
-                <Certificate
-                  user={user}
-                  course={course}
-                  purchaseDate={new Date().toISOString()}
-                />
-              </div>
-              
-              <div className="certificate-download-section">
-                <button
-                  onClick={handleDownloadCertificate}
-                  className="btn btn-primary download-certificate-btn"
-                >
-                  Download Certificate
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Password Modal */}
-      {showPasswordModal && (
-        <div className="password-modal">
-          <div className="password-modal-content">
-            <div className="password-modal-header">
-              <h3>Enter Certificate Password</h3>
-              <button
-                onClick={() => {
-                  setShowPasswordModal(false);
-                  setPasswordError('');
-                  setCertificatePassword('');
-                }}
-                className="close-btn"
-              >
-                ×
-              </button>
-            </div>
-            <div className="password-modal-body">
-              <div className="password-input-group">
-                <label htmlFor="certificate-password">Password:</label>
-                <input
-                  id="certificate-password"
-                  type="password"
-                  value={certificatePassword}
-                  onChange={(e) => setCertificatePassword(e.target.value)}
-                  placeholder="Enter password to download"
-                  className="form-input"
-                />
-                {passwordError && (
-                  <div className="password-error">{passwordError}</div>
-                )}
-              </div>
-              
-              <button
-                onClick={handlePasswordSubmit}
-                className="btn btn-primary"
-              >
-                Download Certificate
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

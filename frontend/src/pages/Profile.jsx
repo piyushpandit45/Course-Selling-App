@@ -191,7 +191,7 @@ const Profile = () => {
                 </div>
                 <div className="stat-item">
                   <div className="stat-number">{purchases.length}</div>
-                  <p className="stat-label">Certificates Earned</p>
+                  <p className="stat-label">Courses Completed</p>
                 </div>
                 <div className="stat-item">
                   <div className="stat-number">{purchases.length * 3}</div>
