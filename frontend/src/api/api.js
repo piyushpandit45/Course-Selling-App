@@ -1,9 +1,6 @@
 import axios from 'axios';
 import { BACKEND_URL } from '../utils/utils.js';
 
-// API Debugger
-console.log("Current Backend URL:", BACKEND_URL);
-
 // Create axios instance
 const api = axios.create({
   baseURL: BACKEND_URL,

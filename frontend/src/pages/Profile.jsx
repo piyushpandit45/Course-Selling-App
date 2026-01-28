@@ -56,7 +56,20 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Call backend logout
+      await fetch(`${process.env.REACT_APP_BACKEND_URL || "https://course-selling-app-3ihd.onrender.com/api/v1"}/User/logout`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+    } catch (error) {
+      console.log('Backend logout error:', error);
+    }
+    
+    // Clear frontend data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('role');

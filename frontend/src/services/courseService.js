@@ -59,6 +59,15 @@ export const buyCourse = async (courseId) => {
   }
 };
 
+export const verifyBuyCoursePassword = async (courseId, password) => {
+  try {
+    const response = await api.post(`/course/verify-buy-password/${courseId}`, { password });
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+
 // Contact Services
 export const submitContact = async (contactData) => {
   try {

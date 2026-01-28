@@ -114,7 +114,7 @@ const MyCourses = () => {
   // Use state user if available, otherwise use parsed data
   const currentUser = user || userData;
 
-  if (!token || !currentUser._id || !currentUser.firstname) {
+  if (!token || !currentUser._id || currentUser.firstName) {
     return (
       <div className="my-courses-page">
         <div className="access-denied">
@@ -183,12 +183,12 @@ const MyCourses = () => {
                 <div className="stat-number">{purchases.length}</div>
                 <p className="stat-label">Total Purchases</p>
               </div>
-              <div className="stat-card">
-                <div className="stat-number">
-                  ₹{purchasedCourses.reduce((total, course) => total + course.price, 0)}
+              <div className="stat-item">
+                  <div className="stat-number">
+                    ₹{purchasedCourses.reduce((total, course) => total + course.price, 0)}
+                  </div>
+                  <p className="stat-label">Total Investment</p>
                 </div>
-                <p className="stat-label">Total Investment</p>
-              </div>
             </div>
 
             {/* Courses Grid */}
@@ -220,7 +220,7 @@ const MyCourses = () => {
                         <span className="course-price">₹{course.price}</span>
                         <span className="purchase-date">
                           Purchased on {new Date(
-                            purchases.find(p => p.courseId === course._id)?.createdAt || new Date()
+                            purchases.find(p => p.courseId.toString() === course._id).createdAt
                           ).toLocaleDateString()}
                         </span>
                       </div>

@@ -39,7 +39,7 @@ app.use(
 
 // routes
 app.use("/api/v1/course", courseRouter);
-app.use("/api/v1/User", UserRouter);
+app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/contact", contactRouter);
 

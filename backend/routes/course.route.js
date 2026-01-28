@@ -8,6 +8,7 @@ import {
   getCourses,
   courseDetails,
   buyCourse,
+  verifyBuyCoursePassword,
 } from "../controllers/course.controller.js";
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.put("/update/:courseId", adminMiddleware, updateCourse);
 router.delete("/delete/:courseId", adminMiddleware, deleteCourse);
 router.get("/courses", getCourses);
 router.get("/:courseId", courseDetails);
+router.post("/verify-buy-password/:courseId", userMiddleware, verifyBuyCoursePassword);
 router.post("/buy/:courseId", userMiddleware, buyCourse);
 
 export default router;

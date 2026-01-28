@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCourseDetails, buyCourse, getPurchases } from '../services/courseService';
+import { getCourseDetails, getPurchases, verifyBuyCoursePassword } from '../services/courseService';
 import '../styles/util.css';
 import './CourseDetails.css';
 
@@ -10,9 +10,14 @@ const CourseDetails = () => {
   
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [buying, setBuying] = useState(false);
   const [alert, setAlert] = useState(null);
   const [isPurchased, setIsPurchased] = useState(false);
+  
+  // Buy Course password modal states
+  const [showBuyPasswordModal, setShowBuyPasswordModal] = useState(false);
+  const [buyPassword, setBuyPassword] = useState('');
+  const [buyPasswordError, setBuyPasswordError] = useState('');
+  const [isVerifyingBuyPassword, setIsVerifyingBuyPassword] = useState(false);
 
   useEffect(() => {
     const fetchCourseDetail = async () => {
@@ -26,24 +31,18 @@ const CourseDetails = () => {
         
         if (token && userStr) {
           try {
-            JSON.parse(userStr);
-            
-            // Check if this course is purchased
-            const purchasesResponse = await getPurchases();
-            const purchased = purchasesResponse.purchases?.some(
-              purchase => purchase.courseId._id === courseId
-            );
-            setIsPurchased(purchased);
+            const purchaseResponse = await getPurchases();
+            const purchasedCourses = purchaseResponse.purchases || [];
+            const isCoursePurchased = purchasedCourses.some(p => p.courseId === courseId);
+            setIsPurchased(isCoursePurchased);
           } catch (error) {
-            console.error('Error checking purchase status:', error);
+            console.error('Error checking purchases:', error);
           }
         }
+        
+        setLoading(false);
       } catch (error) {
-        setAlert({
-          type: 'error',
-          message: error.error || 'Failed to load course details.'
-        });
-      } finally {
+        console.error('Error fetching course details:', error);
         setLoading(false);
       }
     };
@@ -55,16 +54,7 @@ const CourseDetails = () => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     
-    // Safety check for JSON parsing
-    let user;
-    try {
-      user = userStr ? JSON.parse(userStr) : {};
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-      user = {};
-    }
-    
-    if (!token || !user._id) {
+    if (!token || !userStr) {
       setAlert({
         type: 'error',
         message: 'Please login to purchase this course.'
@@ -73,29 +63,56 @@ const CourseDetails = () => {
       return;
     }
 
-    if (user.firstName) { // This means it's an admin
-      setAlert({
-        type: 'error',
-        message: 'Only users can purchase courses.'
-      });
+    // Open buy course password modal
+    setShowBuyPasswordModal(true);
+    setBuyPassword('');
+    setBuyPasswordError('');
+  };
+
+  const handleBuyPasswordSubmit = async () => {
+    if (!buyPassword.trim()) {
+      setBuyPasswordError('Please enter the password');
       return;
     }
 
-    setBuying(true);
+    setIsVerifyingBuyPassword(true);
+    setBuyPasswordError('');
+
     try {
-      await buyCourse(courseId);
-      setAlert({
-        type: 'success',
-        message: 'Course purchased successfully! You can now access it from My Courses.'
-      });
+      const response = await verifyBuyCoursePassword(courseId, buyPassword);
+      
+      if (response.success) {
+        // Password is correct and course purchased successfully
+        setBuyPasswordError('');
+        setIsPurchased(true);
+        setBuyPassword('success'); // Trigger success state
+        
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          setShowBuyPasswordModal(false);
+          setBuyPassword('');
+          setAlert({
+            type: 'success',
+            message: response.message || 'Course purchased successfully'
+          });
+        }, 2000);
+      }
+      
     } catch (error) {
-      setAlert({
-        type: 'error',
-        message: error.error || 'Failed to purchase course. Please try again.'
-      });
+      if (error.success === false && error.message) {
+        setBuyPasswordError(error.message);
+      } else {
+        setBuyPasswordError(error.message || 'Failed to verify password');
+      }
     } finally {
-      setBuying(false);
+      setIsVerifyingBuyPassword(false);
     }
+  };
+
+  const handleCloseBuyPasswordModal = () => {
+    setShowBuyPasswordModal(false);
+    setBuyPassword('');
+    setBuyPasswordError('');
   };
 
   const handleGoBack = () => {
@@ -174,10 +191,9 @@ const CourseDetails = () => {
                 {!isPurchased ? (
                   <button
                     onClick={handleBuyCourse}
-                    disabled={buying}
                     className="btn btn-primary buy-btn"
                   >
-                    {buying ? 'Processing...' : 'Buy Course'}
+                    Buy Course
                   </button>
                 ) : (
                   <button
@@ -281,6 +297,71 @@ const CourseDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Buy Course Password Modal */}
+      {showBuyPasswordModal && (
+        <div className="password-modal">
+          <div className="password-modal-content">
+            <div className="password-modal-header">
+              <h3>Course Purchase Verification</h3>
+              <button 
+                onClick={handleCloseBuyPasswordModal}
+                className="close-btn"
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="password-modal-body">
+              {buyPassword === 'success' ? (
+                // Success State
+                <div className="password-success-state">
+                  <div className="success-checkmark">
+                    <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                      <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                      <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
+                  </div>
+                  <p className="success-text">Your course purchased successfully</p>
+                </div>
+              ) : (
+                // Password Form State
+                <>
+                  <p className="password-modal-description">
+                    Please complete the payment to the admin account first.<br />
+                    After receiving the password, enter it below to unlock and buy this course.
+                  </p>
+                  
+                  <form className="password-form">
+                    <div className="password-input-group">
+                      <input
+                        type="password"
+                        value={buyPassword}
+                        onChange={(e) => setBuyPassword(e.target.value)}
+                        placeholder="Enter course access password"
+                        className="password-input"
+                        disabled={isVerifyingBuyPassword}
+                      />
+                      {buyPasswordError && (
+                        <div className="password-error">{buyPasswordError}</div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleBuyPasswordSubmit}
+                      disabled={isVerifyingBuyPassword}
+                    >
+                      {isVerifyingBuyPassword ? 'Verifying...' : 'Buy Course'}
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

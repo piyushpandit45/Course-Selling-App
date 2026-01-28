@@ -184,4 +184,74 @@ export const buyCourse = async (req, res) => {
   }
 };
 
+export const verifyBuyCoursePassword = async (req, res) => {
+  const { courseId } = req.params;
+  const { password } = req.body;
+  const userId = req.userId;
+
+  try {
+    // Validate input
+    if (!password || !password.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Password is required" 
+      });
+    }
+
+    // Check if course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Course not found" 
+      });
+    }
+
+    // Check if already purchased
+    const existingPurchase = await Purchase.findOne({ userId, courseId });
+    if (existingPurchase) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Course already purchased" 
+      });
+    }
+
+    // Get user from database using auth middleware user info
+    const User = require("../models/user.model.js");
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    // Generate expected password: firstName_2047
+    const expectedPassword = `${user.firstName}_2047`;
+    
+    if (password !== expectedPassword) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Invalid password. Please contact admin to get course access password." 
+      });
+    }
+
+    // Password is correct - proceed with purchase
+    const newPurchase = await new Purchase({ userId, courseId }).save();
+    
+    res.json({ 
+      success: true,
+      message: "Course purchased successfully",
+      purchase: newPurchase
+    });
+
+  } catch (error) {
+    console.error("Password verification error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error" 
+    });
+  }
+};
+
 
