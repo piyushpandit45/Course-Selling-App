@@ -187,19 +187,17 @@ export const buyCourse = async (req, res) => {
 
 export const verifyBuyCoursePassword = async (req, res) => {
   try {
-    console.log('=== VERIFY BUY PASSWORD DEBUG START ===');
+    console.log('=== VERIFY BUY PASSWORD START ===');
     
     const { courseId } = req.params;
     const { password } = req.body;
-    
-    // Handle both auth and non-auth scenarios
-    const userId = req.userId || req.body.userId;
+    const userId = req.userId; // From auth middleware
 
     console.log('CourseId:', courseId);
     console.log('Password provided:', password);
     console.log('UserId:', userId);
 
-    // Validate input
+    // Basic validation
     if (!password || !password.trim()) {
       return res.status(400).json({ 
         success: false, 
@@ -210,11 +208,9 @@ export const verifyBuyCoursePassword = async (req, res) => {
     if (!userId) {
       return res.status(400).json({ 
         success: false, 
-        message: "User ID is required" 
+        message: "User authentication required" 
       });
     }
-
-    console.log('Input validation passed');
 
     // Check if course exists
     const course = await Course.findById(courseId);
@@ -225,77 +221,63 @@ export const verifyBuyCoursePassword = async (req, res) => {
       });
     }
 
-    console.log('Course found:', course.title);
-
     // Check if already purchased
     const existingPurchase = await Purchase.findOne({ userId, courseId });
     if (existingPurchase) {
-      return res.status(400).json({ 
+      return res.status(200).json({ 
         success: false, 
         message: "Course already purchased" 
       });
     }
 
-    console.log('No existing purchase found');
-
     // Get user from database
-    console.log('Looking for user with ID:', userId);
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(200).json({ 
         success: false, 
         message: "User not found" 
       });
     }
 
-    console.log('User found:', user);
     console.log('User firstname:', user.firstname);
-    console.log('User lastname:', user.lastname);
 
     // Generate expected password: firstname_2047
-    let firstName = user.firstname;
-    
+    const firstName = user.firstname;
     if (!firstName) {
-      return res.status(400).json({ 
+      return res.status(200).json({ 
         success: false, 
-        message: "User firstname not found in database" 
+        message: "User firstname not found" 
       });
     }
 
     const expectedPassword = `${firstName}_2047`;
     console.log('Expected password:', expectedPassword);
     
+    // Simple password comparison (case insensitive)
     if (password.toLowerCase() !== expectedPassword.toLowerCase()) {
-      return res.status(401).json({ 
+      return res.status(200).json({ 
         success: false, 
-        message: "Invalid password. Please contact admin to get course access password." 
+        message: "Invalid password. Please contact support to get access." 
       });
     }
 
-    console.log('Password validation passed');
-
     // Password is correct - proceed with purchase
     const newPurchase = await new Purchase({ userId, courseId }).save();
-    console.log('Purchase created:', newPurchase);
+    console.log('Purchase created successfully');
     
-    res.json({ 
+    res.status(200).json({ 
       success: true,
       message: "Course purchased successfully",
       purchase: newPurchase
     });
 
-    console.log('=== VERIFY BUY PASSWORD DEBUG END ===');
+    console.log('=== VERIFY BUY PASSWORD END ===');
 
   } catch (error) {
-    console.error("=== VERIFY BUY PASSWORD ERROR ===");
-    console.error("Error:", error);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-    console.error("=====================================");
-    
-    res.status(500).json({ 
+    console.error("Password verification error:", error.message);
+    res.status(200).json({ 
       success: false, 
-      message: "Server error: " + error.message 
+      message: "Server error occurred" 
     });
   }
 };

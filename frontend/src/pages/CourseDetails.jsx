@@ -96,14 +96,14 @@ const CourseDetails = () => {
             message: response.message || 'Course purchased successfully'
           });
         }, 2000);
+      } else {
+        // Password is wrong or other error - show inside modal
+        setBuyPasswordError(response.message || 'Invalid password');
       }
       
     } catch (error) {
-      if (error.success === false && error.message) {
-        setBuyPasswordError(error.message);
-      } else {
-        setBuyPasswordError(error.message || 'Failed to verify password');
-      }
+      // Show error inside modal only
+      setBuyPasswordError(error.message || 'Failed to verify password');
     } finally {
       setIsVerifyingBuyPassword(false);
     }
