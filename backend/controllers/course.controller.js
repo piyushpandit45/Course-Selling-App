@@ -227,7 +227,21 @@ export const verifyBuyCoursePassword = async (req, res) => {
     }
 
     // Generate expected password: firstName_2047
-    const expectedPassword = `${user.firstName}_2047`;
+    // Handle both firstName and name fields
+    let firstName = user.firstName;
+    if (!firstName && user.name) {
+      // Extract first name from full name (e.g., "piyush Ameta" -> "piyush")
+      firstName = user.name.split(' ')[0];
+    }
+    
+    if (!firstName) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User name not found in database" 
+      });
+    }
+
+    const expectedPassword = `${firstName}_2047`;
     
     if (password !== expectedPassword) {
       return res.status(401).json({ 
