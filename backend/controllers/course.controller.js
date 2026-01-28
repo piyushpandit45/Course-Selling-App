@@ -186,14 +186,15 @@ export const buyCourse = async (req, res) => {
 };
 
 export const verifyBuyCoursePassword = async (req, res) => {
-  const { courseId } = req.params;
-  const { password } = req.body;
-  
-  // Handle both auth and non-auth scenarios
-  const userId = req.userId || req.body.userId;
-
   try {
-    console.log('=== VERIFY BUY PASSWORD DEBUG ===');
+    console.log('=== VERIFY BUY PASSWORD DEBUG START ===');
+    
+    const { courseId } = req.params;
+    const { password } = req.body;
+    
+    // Handle both auth and non-auth scenarios
+    const userId = req.userId || req.body.userId;
+
     console.log('CourseId:', courseId);
     console.log('Password provided:', password);
     console.log('UserId:', userId);
@@ -213,6 +214,8 @@ export const verifyBuyCoursePassword = async (req, res) => {
       });
     }
 
+    console.log('Input validation passed');
+
     // Check if course exists
     const course = await Course.findById(courseId);
     if (!course) {
@@ -221,6 +224,8 @@ export const verifyBuyCoursePassword = async (req, res) => {
         message: "Course not found" 
       });
     }
+
+    console.log('Course found:', course.title);
 
     // Check if already purchased
     const existingPurchase = await Purchase.findOne({ userId, courseId });
@@ -231,7 +236,10 @@ export const verifyBuyCoursePassword = async (req, res) => {
       });
     }
 
-    // Get user from database using auth middleware user info
+    console.log('No existing purchase found');
+
+    // Get user from database
+    console.log('Looking for user with ID:', userId);
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ 
@@ -245,7 +253,6 @@ export const verifyBuyCoursePassword = async (req, res) => {
     console.log('User lastname:', user.lastname);
 
     // Generate expected password: firstname_2047
-    // Use the correct field name from the user schema
     let firstName = user.firstname;
     
     if (!firstName) {
@@ -265,8 +272,11 @@ export const verifyBuyCoursePassword = async (req, res) => {
       });
     }
 
+    console.log('Password validation passed');
+
     // Password is correct - proceed with purchase
     const newPurchase = await new Purchase({ userId, courseId }).save();
+    console.log('Purchase created:', newPurchase);
     
     res.json({ 
       success: true,
@@ -274,9 +284,15 @@ export const verifyBuyCoursePassword = async (req, res) => {
       purchase: newPurchase
     });
 
+    console.log('=== VERIFY BUY PASSWORD DEBUG END ===');
+
   } catch (error) {
-    console.error("Password verification error:", error);
+    console.error("=== VERIFY BUY PASSWORD ERROR ===");
+    console.error("Error:", error);
+    console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
+    console.error("=====================================");
+    
     res.status(500).json({ 
       success: false, 
       message: "Server error: " + error.message 
