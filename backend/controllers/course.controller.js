@@ -232,21 +232,17 @@ export const verifyBuyCoursePassword = async (req, res) => {
     }
 
     console.log('User found:', user);
-    console.log('User firstName:', user.firstName);
-    console.log('User name:', user.name);
+    console.log('User firstname:', user.firstname);
+    console.log('User lastname:', user.lastname);
 
-    // Generate expected password: firstName_2047
-    // Handle both firstName and name fields
-    let firstName = user.firstName;
-    if (!firstName && user.name) {
-      // Extract first name from full name (e.g., "piyush Ameta" -> "piyush")
-      firstName = user.name.split(' ')[0];
-    }
+    // Generate expected password: firstname_2047
+    // Use the correct field name from the user schema
+    let firstName = user.firstname;
     
     if (!firstName) {
       return res.status(400).json({ 
         success: false, 
-        message: "User name not found in database" 
+        message: "User firstname not found in database" 
       });
     }
 
