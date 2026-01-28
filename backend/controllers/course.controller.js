@@ -190,6 +190,11 @@ export const verifyBuyCoursePassword = async (req, res) => {
   const userId = req.userId;
 
   try {
+    console.log('=== VERIFY BUY PASSWORD DEBUG ===');
+    console.log('CourseId:', courseId);
+    console.log('Password provided:', password);
+    console.log('UserId:', userId);
+
     // Validate input
     if (!password || !password.trim()) {
       return res.status(400).json({ 
@@ -226,6 +231,10 @@ export const verifyBuyCoursePassword = async (req, res) => {
       });
     }
 
+    console.log('User found:', user);
+    console.log('User firstName:', user.firstName);
+    console.log('User name:', user.name);
+
     // Generate expected password: firstName_2047
     // Handle both firstName and name fields
     let firstName = user.firstName;
@@ -242,6 +251,7 @@ export const verifyBuyCoursePassword = async (req, res) => {
     }
 
     const expectedPassword = `${firstName}_2047`;
+    console.log('Expected password:', expectedPassword);
     
     if (password !== expectedPassword) {
       return res.status(401).json({ 
@@ -261,9 +271,10 @@ export const verifyBuyCoursePassword = async (req, res) => {
 
   } catch (error) {
     console.error("Password verification error:", error);
+    console.error("Error stack:", error.stack);
     res.status(500).json({ 
       success: false, 
-      message: "Server error" 
+      message: "Server error: " + error.message 
     });
   }
 };
