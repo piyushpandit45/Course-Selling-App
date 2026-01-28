@@ -18,6 +18,10 @@ router.put("/update/:courseId", adminMiddleware, updateCourse);
 router.delete("/delete/:courseId", adminMiddleware, deleteCourse);
 router.get("/courses", getCourses);
 router.get("/:courseId", courseDetails);
+router.post("/test-endpoint", (req, res) => {
+  res.json({ message: "Backend is working!", timestamp: new Date().toISOString() });
+});
+router.post("/verify-buy-password-no-auth/:courseId", verifyBuyCoursePassword);
 router.post("/verify-buy-password/:courseId", userMiddleware, verifyBuyCoursePassword);
 router.post("/buy/:courseId", userMiddleware, buyCourse);
 

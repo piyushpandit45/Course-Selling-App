@@ -187,7 +187,9 @@ export const buyCourse = async (req, res) => {
 export const verifyBuyCoursePassword = async (req, res) => {
   const { courseId } = req.params;
   const { password } = req.body;
-  const userId = req.userId;
+  
+  // Handle both auth and non-auth scenarios
+  const userId = req.userId || req.body.userId;
 
   try {
     console.log('=== VERIFY BUY PASSWORD DEBUG ===');
@@ -200,6 +202,13 @@ export const verifyBuyCoursePassword = async (req, res) => {
       return res.status(400).json({ 
         success: false, 
         message: "Password is required" 
+      });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User ID is required" 
       });
     }
 
