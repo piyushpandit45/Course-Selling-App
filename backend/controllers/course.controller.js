@@ -1,6 +1,7 @@
 import Course from "../models/course.model.js"; // ✅ Fixed: Use default import
 import { v2 as cloudinary } from "cloudinary";
 import Purchase from "../models/purchase.model.js";
+import User from "../models/user.model.js";
 
 
 // CREATE COURSE
@@ -231,7 +232,6 @@ export const verifyBuyCoursePassword = async (req, res) => {
     }
 
     // Get user from database using auth middleware user info
-    const User = require("../models/user.model.js");
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ 
@@ -258,7 +258,7 @@ export const verifyBuyCoursePassword = async (req, res) => {
     const expectedPassword = `${firstName}_2047`;
     console.log('Expected password:', expectedPassword);
     
-    if (password !== expectedPassword) {
+    if (password.toLowerCase() !== expectedPassword.toLowerCase()) {
       return res.status(401).json({ 
         success: false, 
         message: "Invalid password. Please contact admin to get course access password." 
