@@ -10,7 +10,7 @@
 
 .login-container {
   width: 100%;
-  max-width: 400px;
+  max-width: min(400px, 90vw);
 }
 
 .login-card {
@@ -26,14 +26,14 @@
 }
 
 .login-title {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 6vw, 2rem);
   font-weight: bold;
   color: var(--primary-color);
   margin-bottom: 1rem;
 }
 
 .login-subtitle {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 4vw, 1.5rem);
   font-weight: bold;
   color: var(--text-dark);
   margin-bottom: 0.5rem;

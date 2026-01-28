@@ -48,7 +48,10 @@ const CertificateModal = ({
     
     doc.setFontSize(10);
     doc.text(`Duration: ${course.duration || 'Self-paced'}`, 148.5, 125, { align: 'center' });
-    doc.text(`Start Date: ${new Date(purchases.find(p => p.courseId === course._id)?.createdAt || new Date()).toLocaleDateString()}`, 148.5, 135, { align: 'center' });
+    doc.text(`Start Date: ${(() => {
+      const purchase = purchases.find(p => p.courseId === course._id);
+      return purchase ? new Date(purchase.createdAt).toLocaleDateString() : new Date().toLocaleDateString();
+    })()}`, 148.5, 135, { align: 'center' });
     doc.text(`End Date: ${new Date().toLocaleDateString()}`, 148.5, 145, { align: 'center' });
     
     doc.setFontSize(8);
@@ -63,7 +66,9 @@ const CertificateModal = ({
   };
 
   const generateCertificateId = (userId, courseId) => {
-    return `${userId.slice(-8).toUpperCase()}-${courseId.slice(-8).toUpperCase()}`;
+    const safeUserId = userId ? String(userId) : 'USER';
+    const safeCourseId = courseId ? String(courseId) : 'COURSE';
+    return `${safeUserId.slice(-8).toUpperCase()}-${safeCourseId.slice(-8).toUpperCase()}`;
   };
 
   if (!show || !course) return null;
@@ -102,7 +107,12 @@ const CertificateModal = ({
                 </div>
                 <div className="detail-item">
                   <span>Start Date:</span>
-                  <span>{new Date(purchases.find(p => p.courseId === course._id)?.createdAt || new Date()).toLocaleDateString()}</span>
+                  <span>
+                    {(() => {
+                      const purchase = purchases.find(p => p.courseId === course._id);
+                      return purchase ? new Date(purchase.createdAt).toLocaleDateString() : new Date().toLocaleDateString();
+                    })()}
+                  </span>
                 </div>
                 <div className="detail-item">
                   <span>End Date:</span>
@@ -113,13 +123,10 @@ const CertificateModal = ({
             
             <div className="certificate-footer">
               <div className="certificate-id">
-                Certificate ID: {generateCertificateId(user._id, course._id)}
+                Certificate ID: {generateCertificateId(user?._id, course?._id)}
               </div>
               <div className="issue-date">
                 Issue Date: {new Date().toLocaleDateString()}
-              </div>
-              <div className="signature">
-                Authorized Signature
               </div>
             </div>
           </div>

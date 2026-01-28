@@ -135,12 +135,19 @@
 /* Courses Grid */
 .courses-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   padding: 2rem 0;
 }
 
 /* Responsive Grid Breakpoints */
+@media (min-width: 640px) {
+  .courses-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
 @media (min-width: 768px) {
   .courses-grid {
     grid-template-columns: repeat(2, 1fr);

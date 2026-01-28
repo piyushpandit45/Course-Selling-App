@@ -143,13 +143,20 @@
   position: fixed;
   top: 0;
   left: -100%;
-  width: 80%;
-  max-width: 300px;
+  width: 85%;
+  max-width: 320px;
   height: 100vh;
   background-color: white;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transition: left 0.3s ease;
   z-index: 1001;
+}
+
+@media (max-width: 480px) {
+  .mobile-menu {
+    width: 90%;
+    max-width: 280px;
+  }
 }
 
 .mobile-menu.active {
@@ -167,6 +174,23 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mobile-overlay .close-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .mobile-overlay.active {
@@ -199,13 +223,15 @@
   color: var(--text-light);
   cursor: pointer;
   padding: 0;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: all 0.3s ease;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .mobile-menu-close:hover {
